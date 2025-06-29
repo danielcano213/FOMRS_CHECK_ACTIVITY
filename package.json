@@ -33,7 +33,7 @@
   "dependencies": {
     "express": "^4.21.2",
     "form-app": "file:",
-    "pm2": "^6.0.6",
+    "pm2": "^6.0.8",
     "serve": "^14.2.4"
   },
   "description": ""

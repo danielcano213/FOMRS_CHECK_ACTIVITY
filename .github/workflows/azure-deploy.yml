@@ -44,7 +44,20 @@ jobs:
           key: ${{ secrets.VM_PRIVATE_KEY }}
           port: ${{ secrets.VM_PORT }}
           script: |
-            cd ~/form-app
+            # Asegura que el directorio de la aplicación exista en la VM
+            mkdir -p /home/${{ secrets.VM_USERNAME }}/form-app
+            # Limpia el contenido del directorio antes de copiar los nuevos archivos
+            # Esto resuelve el error "File exists" durante la descompresión.
+            rm -rf /home/${{ secrets.VM_USERNAME }}/form-app/*
+            
+            # Navega al directorio de la aplicación para los siguientes comandos
+            cd /home/${{ secrets.VM_USERNAME }}/form-app
+            
+            # Instala las dependencias del proyecto en la VM
             npm install
-            # If using PM2, restart the app or start if not running:
+            
+            # Inicia o reinicia la aplicación usando PM2
+            # 'pm2 restart app' intenta reiniciar una app con nombre 'app'
+            # '||' significa "o si lo anterior falla"
+            # 'pm2 start server.js --name form-app' inicia la app si no está corriendo
             pm2 restart app || pm2 start server.js --name form-app

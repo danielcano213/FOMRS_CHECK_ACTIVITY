@@ -31,11 +31,11 @@ jobs:
           host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USERNAME }}
           key: ${{ secrets.VM_PRIVATE_KEY }}
-          port: ${{ secrets.VM_PORT }}  # optional if using default port 22, can be omitted
+          port: ${{ secrets.VM_PORT }}
           source: "."
-          target: "/home/${{ secrets.VM_USERNAME }}/form-app"  # adjust target path as needed
+          target: "/home/${{ secrets.VM_USERNAME }}/form-app" 
 
-      # Execute remote commands via SSH to install dependencies and restart the app.
+      # Execute remote commands via SSH to clean, install dependencies, and restart the app.
       - name: Execute remote SSH commands
         uses: appleboy/ssh-action@master
         with:
@@ -44,20 +44,20 @@ jobs:
           key: ${{ secrets.VM_PRIVATE_KEY }}
           port: ${{ secrets.VM_PORT }}
           script: |
-            # Asegura que el directorio de la aplicación exista en la VM
+            # 1. Asegura que el directorio de la aplicación exista
             mkdir -p /home/${{ secrets.VM_USERNAME }}/form-app
-            # Limpia el contenido del directorio antes de copiar los nuevos archivos
-            # Esto resuelve el error "File exists" durante la descompresión.
+            
+            # 2. **¡NUEVO/IMPORTANTE!** Limpia el contenido del directorio antes de que los nuevos archivos sean copiados y descomprimidos.
+            # Esto evita el error "File exists" del comando tar.
+            # El "rm -rf *" limpia todo dentro del directorio, pero deja el directorio en sí.
             rm -rf /home/${{ secrets.VM_USERNAME }}/form-app/*
             
-            # Navega al directorio de la aplicación para los siguientes comandos
+            # 3. Navega al directorio de la aplicación (ahora limpio)
             cd /home/${{ secrets.VM_USERNAME }}/form-app
             
-            # Instala las dependencias del proyecto en la VM
+            # 4. Instala las dependencias del proyecto en la VM
+            # Esto es crucial si 'source: ." no incluye node_modules o si hay diferencias de plataforma
             npm install
             
-            # Inicia o reinicia la aplicación usando PM2
-            # 'pm2 restart app' intenta reiniciar una app con nombre 'app'
-            # '||' significa "o si lo anterior falla"
-            # 'pm2 start server.js --name form-app' inicia la app si no está corriendo
+            # 5. Inicia o reinicia la aplicación usando PM2
             pm2 restart app || pm2 start server.js --name form-app
